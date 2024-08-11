@@ -13,7 +13,7 @@ app = FastAPI()
 def read_root():
     return {"message": "Hello World"}
 
-@app.post("/upload-excel/")
+@app.post("/upload/")
 async def upload_excel(file: UploadFile = File(...)):
     # Guardar el archivo temporalmente
     temp_file_path = f"./file/{file.filename}"
