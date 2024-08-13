@@ -59,6 +59,9 @@ class ConvertToJson:
                 sum_monto_gs_n1 =  sum(x.monto_gs for x in children_n1)
                 sum_monto_gs_n2 =  sum(x.monto_gs for x in children_n2)
                 sum_monto_gs_n3 =  sum(x.monto_gs for x in children_n3)
+                sum_monto_usd_n1 =  sum(x.monto_usd for x in children_n1)
+                sum_monto_usd_n2 =  sum(x.monto_usd for x in children_n2)
+                sum_monto_usd_n3 =  sum(x.monto_usd for x in children_n3)
                 
                 # if is_parent == Parent.IS_PARENT:
                 #     print("IS PARENT?")
@@ -80,7 +83,7 @@ class ConvertToJson:
                 #         print (e)
                         # is_parent = Parent.NONE                
                 
-                if nodes[i].monto_gs == sum_monto_gs_n1:
+                if nodes[i].monto_gs == sum_monto_gs_n1 or nodes[i].monto_usd == sum_monto_usd_n1:
                     # print(i)
                     is_parent = Parent.MAYBE
                     try:
@@ -92,7 +95,7 @@ class ConvertToJson:
                         # print (e)
                         is_parent = Parent.NONE
                         
-                if nodes[i].monto_gs == sum_monto_gs_n2:
+                if nodes[i].monto_gs == sum_monto_gs_n2 or nodes[i].monto_usd == sum_monto_usd_n2:
                     # print(i)
                     is_parent = Parent.MAYBE
                     try:
@@ -104,7 +107,7 @@ class ConvertToJson:
                         # print (e)
                         is_parent = Parent.NONE
                         
-                if nodes[i].monto_gs == sum_monto_gs_n3:
+                if nodes[i].monto_gs == sum_monto_gs_n3 or nodes[i].monto_usd == sum_monto_usd_n3:
                     # print(i)
                     is_parent = Parent.MAYBE
                     try:
