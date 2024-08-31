@@ -10,7 +10,7 @@ class Node:
         self.monto_gs = monto_gs
         self.monto_usd = monto_usd
         self.children = []
-        self.nivel = Nivel.SIN_NIVEL
+        self.nivel = 0
         
     def add_child(self, child):
         self.children.insert(0, child)
@@ -25,7 +25,7 @@ class Node:
             'monto_gs': self.monto_gs,
             'monto_usd': self.monto_usd,
             'children': [child.to_dict() for child in self.children],
-            'nivel': self.nivel.name  
+            'nivel': self.nivel  
         }
 
 

@@ -1,6 +1,7 @@
 from asyncio import sleep
 import pandas as pd
 import json
+import math
 
 from nodes import Node, Parent, Nivel
 
@@ -11,20 +12,23 @@ class ConvertToJson:
     
 
     nodes = []
-
-    def create_nodes(self, file_path):
-
-
-        df = pd.read_excel(file_path, sheet_name='Database')
         
-        for index, row in df[::-1].iterrows():
-            numero_de_cuenta = str(row['NUMERO_DE_CUENTA'])
-            descripcion = row['CUENTA']
-            monto_gs = row['MONTO_GS']
-            monto_usd = row['MONTO_USD']
+    def create_nodes(self, file_path, inverse):
+        df = pd.read_excel(file_path, sheet_name=0)
+        
+        if inverse:        
+            df = df[::-1].iterrows()
+        else:
+            df = df.iterrows()
+        
+        for index, row in df:
+            numero_de_cuenta = str(row['NUMERO_DE_CUENTA']) if 'NUMERO_DE_CUENTA' in row else None
+            descripcion = row['CUENTA'] if 'CUENTA' in row else None
+            monto_gs = row['MONTO_GS'] if 'MONTO_GS' in row else None
+            monto_usd = row['MONTO_USD'] if 'MONTO_USD' in row else None
             
             # Crear un nodo con la descripción y los montos
-            if monto_gs == 0:
+            if monto_gs == 0 or monto_gs is None or (isinstance(monto_gs, float) and math.isnan(monto_gs)):
                 continue
             
             node = Node(numero_de_cuenta, descripcion, monto_gs, monto_usd)
@@ -32,176 +36,107 @@ class ConvertToJson:
             # Almacenar el nodo en el diccionario
             self.nodes.append(node)
             
-
-
+   
     def link_nodes(self):
-        # Convertir el árbol a una estructura de diccionarios
-        nodes = self.nodes
-        children_n1 = []
-        children_n2 = []
-        children_n3 = []
-        parents = []
-        parent = 0
-        sum_monto_gs = 0
-        is_parent = Parent.NONE
-        nivel = Nivel.UNO
-        
-        # print(len(nodes[-1].children))
-        count = 0
-        while (len(nodes) != 0):
-            count += 1
-            # print("while count: ", count)
-            for i in range(len(nodes)):
-                # print("for i: ", i)
-                # print(nodes[i].__dict__)
-                # print("sum_monto_gs: ", sum_monto_gs)
-                
-                sum_monto_gs_n1 =  sum(x.monto_gs for x in children_n1)
-                sum_monto_gs_n2 =  sum(x.monto_gs for x in children_n2)
-                sum_monto_gs_n3 =  sum(x.monto_gs for x in children_n3)
-                sum_monto_usd_n1 =  sum(x.monto_usd for x in children_n1)
-                sum_monto_usd_n2 =  sum(x.monto_usd for x in children_n2)
-                sum_monto_usd_n3 =  sum(x.monto_usd for x in children_n3)
-                
-                # if is_parent == Parent.IS_PARENT:
-                #     print("IS PARENT?")
-                #     sum_parents = 0
-                #     try:
-                #         print(nodes[i].__dict__)
-                #         print(nodes[i+1].__dict__)
-                #         if nodes[i].monto_gs != nodes[i+1].monto_gs:
-                #             print("NO IS PARENT")
-                #             is_parent = Parent.NONE
-                #             nivel = Nivel.UNO
-                #             continue
-                #         else:
-                #             print("IS PARENT")
-                #             is_parent = Parent.IS_PARENT
-                #             parent = i
-                #             nivel = nivel + 1
-                #     except Exception as e:
-                #         print (e)
-                        # is_parent = Parent.NONE                
-                
-                if nodes[i].monto_gs == sum_monto_gs_n1 or nodes[i].monto_usd == sum_monto_usd_n1:
-                    # print(i)
-                    is_parent = Parent.MAYBE
-                    try:
-                        is_parent = Parent.IS_PARENT
-                        parent = i
-                        nivel = Nivel.DOS
-                            
-                    except Exception as e:
-                        # print (e)
-                        is_parent = Parent.NONE
-                        
-                if nodes[i].monto_gs == sum_monto_gs_n2 or nodes[i].monto_usd == sum_monto_usd_n2:
-                    # print(i)
-                    is_parent = Parent.MAYBE
-                    try:
-                        is_parent = Parent.IS_PARENT
-                        parent = i
-                        nivel = Nivel.TRES
-                            
-                    except Exception as e:
-                        # print (e)
-                        is_parent = Parent.NONE
-                        
-                if nodes[i].monto_gs == sum_monto_gs_n3 or nodes[i].monto_usd == sum_monto_usd_n3:
-                    # print(i)
-                    is_parent = Parent.MAYBE
-                    try:
-                        is_parent = Parent.IS_PARENT
-                        parent = i
-                        nivel = Nivel.CUATRO
-                            
-                    except Exception as e:
-                        # print (e)
-                        is_parent = Parent.NONE
-                        
-                if is_parent == Parent.IS_PARENT:
-                    # print(i)
-                    # print("is parent: ")
-                    # print("nivel: ", nivel)
-                    if nivel == Nivel.DOS:
-                        # print("nivel dos")
-                        nodes[parent].set_nivel(Nivel.DOS)
-                        for children in children_n1:
-                            nodes[parent].add_child(children)
-                        children_n2.append(nodes[parent])
-                        children_n1.clear()
-                        
-                    if nivel == Nivel.TRES:
-                        # print("nivel tres")
-                        nodes[parent].set_nivel(Nivel.TRES)
-                        for children in children_n2:
-                            nodes[parent].add_child(children)
-                        children_n3.append(nodes[parent])
-                        children_n2.clear()
-                        
-                    if nivel == Nivel.CUATRO:
-                        # print("nivel parent")
-                        nodes[parent].set_nivel(Nivel.CUATRO)
-                        for children in children_n3:
-                            nodes[parent].add_child(children)
-                        parents.append(nodes[parent])
-                        children_n3.clear()
-                    
-                    for j in range(len(nodes)):
-                        if j <= i:
-                            # print("eliminar: ", j)
-                            # print(nodes[0].__dict__)
-                            nodes.pop(0)                    
+        result = {}  # Usaremos un diccionario para almacenar los niveles
+        nivel_mayor = 0
 
-                    is_parent = Parent.NONE
-                    nivel = Nivel.UNO
+        while len(self.nodes) > 0:
+            node = self.nodes.pop()
+            self.log("nodo actual: ", node.__dict__)
+            
+            if 0 not in result:
+                # Si el nivel 0 no existe, lo creamos y agregamos el nodo
+                result[0] = [node]
+                node.set_nivel(0)
+                continue
+
+            for index in sorted(result.keys()):
+                nivel = result[index]
+                # self.log(f"Nivel {index}: ", [nodo.numero_de_cuenta for nodo in nivel])
+
+                sum_monto_gs = sum(data.monto_gs if data.monto_gs is not None else 0 for data in nivel)
+                sum_monto_usd = sum(data.monto_usd if data.monto_usd is not None else 0 for data in nivel)
+
+                # self.log("sum_monto_gs: ", sum_monto_gs)
+                # self.log("sum_monto_usd: ", sum_monto_usd)
+
+                if node.monto_gs == sum_monto_gs or node.monto_usd == sum_monto_usd:
+                    
+                    for data in nivel:
+                        node.add_child(data)
+                    
+                    nuevo_nivel = index + 1
+                    
+                    result[index].clear()
+                    node.set_nivel(nuevo_nivel)
+                    self.log("nuevo nivel: ", nuevo_nivel)
+                    
+                    if nuevo_nivel > nivel_mayor:
+                        nivel_mayor = nuevo_nivel                  
+
+                    if (nuevo_nivel) in result:
+                        # result[nuevo_nivel].append(node)
+                        result[nuevo_nivel].insert(0, node)
+                    else:
+                        result[nuevo_nivel] = [node]     
                     break
-                
 
-                
-                if nivel == Nivel.UNO:
-                    nodes[i].set_nivel(Nivel.UNO)
-                    children_n1.append(nodes[i])
-                    # print("Add nivel uno")
-                    
-                # print("monto_gs nodo: ", nodes[i].monto_gs)
-                # print("sum_monto_gs_n1: ", sum_monto_gs_n1)
-                # print("sum_monto_gs_n2: ", sum_monto_gs_n2)
-                # print("sum_monto_gs_n3: ", sum_monto_gs_n3)
-                # sum_monto_gs += nodes[i].monto_gs
-            #     if i == 10:
-            #         break
-            # if count == 10:
-            #     break
-        return parents
+                if index == max(result.keys()):
+                    # result[0].append(node)
+                    result[0].insert(0, node)
+
+        self.log("result: ", result)
+        # self.log("result: ", result[nivel_mayor])
+        return result
     
     
     
-    def to_dict(self, parents):
+        
+    
+    def to_dict(self, result):
         data = []
-        for parent in parents:
-            node_data = parent.to_dict()
-            data.insert(0, node_data)
+        self.log("parents: ", result)
+        
+        for index in sorted(result.keys()):
+            nodes = result[index]
+            for node in nodes:
+                node_data = node.to_dict()
+                data.append(node_data)
 
         return data
 
 
-
     def convert(self, file_path):
-        self.create_nodes(file_path)
+        self.create_nodes(file_path, False)
         
-        parents = self.link_nodes()
+        result = self.link_nodes()
+        
+        total_elements = sum(len(nodes) for nodes in result.values())
+        self.log("total_elements: ", total_elements)
+        
+        
+        if total_elements == 0:
+            self.create_nodes(file_path, True)
+            result = self.link_nodes()
+        
+        total_elements = sum(len(nodes) for nodes in result.values())
+        self.log("total_elements: ", total_elements)
 
-        data = self.to_dict(parents)
+        data = self.to_dict(result)
         
         with open('./file/output.json', 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, ensure_ascii=False, indent=4)
             
-        # print(data)
+        # self.log(data)
         
         return data
         
         
-        # print_notes()
+    def log(self, *args):
+        # print(*args)
+        pass
+
+
 
     
