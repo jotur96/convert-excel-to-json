@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 from typing import List
+import os
 
 import shutil
 
@@ -16,7 +17,7 @@ def read_root():
 @app.post("/upload/")
 async def upload_excel(file: UploadFile = File(...)):
     # Guardar el archivo temporalmente
-    temp_file_path = f"./file/{file.filename}"
+    temp_file_path = f"./file/temp.xlsx"
     with open(temp_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
@@ -25,6 +26,9 @@ async def upload_excel(file: UploadFile = File(...)):
     
     # Pasar el archivo a la función convert_json.main()
     result = converter.convert(file_path=temp_file_path)
+    
+    # Eliminar el archivo temporal
+    os.remove(temp_file_path)
     
     # Devolver el resultado JSON
     return {"result": result}
